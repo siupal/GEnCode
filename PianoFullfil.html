@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虚拟钢琴</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            transition: background-color 0.3s, color 0.3s;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .control-panel {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 20px;
+            background-color: #2c3e50;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 840px;
+            margin: 0 auto 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .control-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #ecf0f1;
+        }
+
+        .control-group select,
+        .control-group input[type="number"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background-color: #34495e;
+            color: #ecf0f1;
+        }
+
+        .control-group input[type="range"] {
+            width: 150px;
+            accent-color: #3498db;
+        }
+
+        .piano {
+            position: relative;
+            width: 100%;
+            max-width: 840px;
+            margin: 0 auto;
+            height: 240px;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+        }
+
+        .white-key,
+        .black-key {
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+
+        .white-key {
+            width: calc(100% / 7);
+            height: 220px;
+            background-color: ivory;
+            border: 1px solid #ccc;
+            border-radius: 0 0 4px 4px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 1;
+            float: left;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .black-key {
+            width: calc(100% / 7 * 0.6);
+            height: 140px;
+            background-color: #333;
+            position: absolute;
+            top: 0;
+            z-index: 2;
+            border-radius: 0 0 4px 4px;
+            box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .black-key:nth-of-type(1) {
+            left: calc(100% / 7 * 0.75);
+        }
+        .black-key:nth-of-type(2) {
+            left: calc(100% / 7 * 1.75);
+        }
+        .black-key:nth-of-type(3) {
+            left: calc(100% / 7 * 3.75);
+        }
+        .black-key:nth-of-type(4) {
+            left: calc(100% / 7 * 4.75);
+        }
+        .black-key:nth-of-type(5) {
+            left: calc(100% / 7 * 5.75);
+        }
+
+        .visualizer {
+            width: 100%;
+            max-width: 840px;
+            height: 80px;
+            background: linear-gradient(90deg, #2c3e50, #3498db, #2c3e50);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .recorder-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 840px;
+            margin: 20px auto;
+        }
+
+        .recorder-container h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .recorder-container button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .recorder-container .start-button {
+            background-color: #e74c3c;
+        }
+
+        .recorder-container .stop-button {
+            background-color: #7f8c8d;
+        }
+
+        .recorder-container .play-button {
+            background-color: #2ecc71;
+        }
+
+        .metronome-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #2c3e50;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 840px;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .metronome-container input[type="number"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background-color: #34495e;
+            color: #ecf0f1;
+        }
+
+        .metronome-container button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            background-color: #3498db;
+        }
+
+        .metronome-light {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #ecf0f1;
+            margin: 10px auto;
+            transition: background-color 0.2s;
+        }
+
+        /* 添加移动端适配样式 */
+        @media (max-width: 768px) {
+            .piano {
+                height: 180px;
+            }
+
+            .white-key {
+                height: 160px;
+            }
+
+            .black-key {
+                height: 100px;
+            }
+
+            .control-panel {
+                flex-direction: column;
+            }
+        }
+
+        /* 添加预置音乐折叠样式 */
+        .preset-songs-container {
+            margin-top: 20px;
+            max-width: 840px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .preset-songs-toggle {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            width: 100%;
+            text-align: left;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .preset-songs-toggle:hover {
+            background-color: #2980b9;
+        }
+
+        .preset-songs-toggle::after {
+            content: '\25BC';
+            float: right;
+            transition: transform 0.3s;
+        }
+
+        .preset-songs-toggle.active::after {
+            transform: rotate(180deg);
+        }
+
+        .preset-songs-list {
+            display: none;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 10px;
+            transition: max-height 0.3s ease-out;
+            overflow: hidden;
+        }
+
+        .preset-songs-list.show {
+            display: block;
+        }
+
+        .preset-songs-list button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 5px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .preset-songs-list button:hover {
+            background-color: #2980b9;
+        }
+
+        /* 深色模式样式 */
+        body.dark-mode .preset-songs-list {
+            background-color: #2c3e50;
+        }
+
+        body.dark-mode .preset-songs-list button {
+            background-color: #34495e;
+        }
+
+        body.dark-mode .preset-songs-list button:hover {
+            background-color: #2c3e50;
+        }
+
+        /* 添加深色模式样式 */
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+        }
+
+        body.dark-mode .control-panel,
+        body.dark-mode .recorder-container,
+        body.dark-mode .metronome-container {
+            background-color: #2c3e50;
+        }
+
+        body.dark-mode .white-key {
+            background-color: #e0e0e0;
+        }
+
+        body.dark-mode .black-key {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; margin-bottom: 20px; font-size: 2.5rem;">虚拟钢琴</h1>
+    <div class="control-panel">
+        <div class="control-group">
+            <label for="instrument">乐器</label>
+            <select id="instrument">
+                <option value="piano">钢琴</option>
+                <option value="synth">合成器</option>
+                <option value="guitar">吉他</option>
+                <option value="organ">管风琴</option>
+                <option value="flute">长笛</option>
+                <option value="violin">小提琴</option>
+                <option value="harpsichord">大键琴</option>
+                <option value="trumpet">小号</option>
+                <option value="saxophone">萨克斯风</option>
+                <option value="cello">大提琴</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="octave">八度</label>
+            <input id="octave" type="number" min="0" max="8" value="4">
+        </div>
+
+        <div class="control-group">
+            <label for="volume">音量: <span id="volume-label">50%</span></label>
+            <input id="volume" type="range" min="0" max="1" step="0.01" value="0.5">
+        </div>
+
+        <div class="control-group">
+            <label for="sustain">Sustain</label>
+            <div id="sustain-toggle" class="toggle"></div>
+        </div>
+
+        <div class="control-group">
+            <label for="filterType">滤波器类型</label>
+            <select id="filterType">
+                <option value="lowpass">低通</option>
+                <option value="highpass">高通</option>
+                <option value="bandpass">带通</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="filterFrequency">滤波器频率: <span id="filter-frequency-label">1000 Hz</span></label>
+            <input id="filterFrequency" type="range" min="100" max="10000" value="1000">
+        </div>
+
+        <div class="control-group">
+            <label for="effect">音效</label>
+            <select id="effect">
+                <option value="none">无</option>
+                <option value="reverb">混响</option>
+                <option value="delay">延迟</option>
+                <option value="distortion">失真</option>
+                <option value="chorus">合唱</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <button id="theme-toggle">Dark Mode</button>
+        </div>
+    </div>
+
+    <div class="piano" id="piano"></div>
+    <div class="visualizer" id="visualizer">No Active Notes</div>
+
+    <div class="recorder-container">
+        <h2>录音机</h2>
+        <div style="text-align: center; margin-bottom: 15px">
+            <button class="start-button" id="start-recording">开始录音</button>
+            <button class="stop-button" id="stop-recording" style="display: none;">停止录音</button>
+            <button class="play-button" id="play-recording" disabled>播放录音</button>
+        </div>
+        <div id="recorded-notes-container"></div>
+    </div>
+
+    <div class="metronome-container">
+        <h2>节拍器</h2>
+        <div class="metronome-light" id="metronome-light"></div>
+        <label for="bpm">BPM:</label>
+        <input id="bpm" type="number" value="120" min="30" max="300">
+        <button id="toggle-metronome">开始节拍器</button>
+    </div>
+
+    <!-- 修改预置音乐部分 -->
+    <div class="preset-songs-container">
+        <button class="preset-songs-toggle">预置音乐</button>
+        <div class="preset-songs-list" id="preset-songs-list"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const piano = document.getElementById('piano');
+            const visualizer = document.getElementById('visualizer');
+            const instrumentSelect = document.getElementById('instrument');
+            const octaveInput = document.getElementById('octave');
+            const volumeInput = document.getElementById('volume');
+            const filterTypeSelect = document.getElementById('filterType');
+            const filterFrequencyInput = document.getElementById('filterFrequency');
+            const effectSelect = document.getElementById('effect');
+            const startRecordingButton = document.getElementById('start-recording');
+            const stopRecordingButton = document.getElementById('stop-recording');
+            const playRecordingButton = document.getElementById('play-recording');
+            const bpmInput = document.getElementById('bpm');
+            const toggleMetronomeButton = document.getElementById('toggle-metronome');
+            const metronomeLight = document.getElementById('metronome-light');
+
+            let metronomeInterval;
+            let isMetronomePlaying = false;
+
+            toggleMetronomeButton.addEventListener('click', () => {
+                if (isMetronomePlaying) {
+                    clearInterval(metronomeInterval);
+                    toggleMetronomeButton.textContent = '开始节拍器';
+                    metronomeLight.style.backgroundColor = '#ecf0f1';
+                    isMetronomePlaying = false;
+                } else {
+                    const bpm = parseInt(bpmInput.value);
+                    const interval = 60000 / bpm;
+                    metronomeInterval = setInterval(() => {
+                        const clickOscillator = audioContext.createOscillator();
+                        const clickGain = audioContext.createGain();
+                        clickOscillator.type = 'square';
+                        clickOscillator.frequency.setValueAtTime(1000, audioContext.currentTime);
+                        clickGain.gain.setValueAtTime(0.5, audioContext.currentTime);
+                        clickOscillator.connect(clickGain).connect(audioContext.destination);
+                        clickOscillator.start();
+                        clickOscillator.stop(audioContext.currentTime + 0.1);
+
+                        metronomeLight.style.backgroundColor = '#e74c3c';
+                        setTimeout(() => {
+                            metronomeLight.style.backgroundColor = '#ecf0f1';
+                        }, 100);
+                    }, interval);
+                    toggleMetronomeButton.textContent = '停止节拍器';
+                    isMetronomePlaying = true;
+                }
+            });
+
+            // Piano and Recording Functionalities
+            const activeKeys = new Set();
+            const recordedNotes = [];
+            let isRecording = false;
+
+            const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            const whiteKeysOrder = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+
+            whiteKeysOrder.forEach((note, index) => {
+                const key = document.createElement('div');
+                key.classList.add('white-key');
+                key.dataset.note = note;
+                key.dataset.index = index;
+                piano.appendChild(key);
+
+                key.addEventListener('mousedown', () => playNote(note));
+                key.addEventListener('mouseup', () => stopNote(note));
+                key.addEventListener('mouseleave', () => stopNote(note));
+            });
+
+            ['C#', 'D#', 'F#', 'G#', 'A#'].forEach((note, index) => {
+                const key = document.createElement('div');
+                key.classList.add('black-key');
+                key.dataset.note = note;
+                key.style.left = `${(index + 1) * (100 / 7) - 15}%`;
+                piano.appendChild(key);
+
+                key.addEventListener('mousedown', () => playNote(note));
+                key.addEventListener('mouseup', () => stopNote(note));
+                key.addEventListener('mouseleave', () => stopNote(note));
+            });
+
+            document.addEventListener('keydown', (event) => {
+                const keyMap = {
+                    'a': 'C', 'w': 'C#', 's': 'D', 'e': 'D#', 'd': 'E', 'f': 'F', 't': 'F#', 'g': 'G', 'y': 'G#', 'h': 'A', 'u': 'A#', 'j': 'B', 'k': 'C'
+                };
+                const note = keyMap[event.key];
+                if (note) {
+                    playNote(note);
+                }
+            });
+
+            document.addEventListener('keyup', (event) => {
+                const keyMap = {
+                    'a': 'C', 'w': 'C#', 's': 'D', 'e': 'D#', 'd': 'E', 'f': 'F', 't': 'F#', 'g': 'G', 'y': 'G#', 'h': 'A', 'u': 'A#', 'j': 'B', 'k': 'C'
+                };
+                const note = keyMap[event.key];
+                if (note) {
+                    stopNote(note);
+                }
+            });
+
+            const volumeLabel = document.getElementById('volume-label');
+            const sustainToggle = document.getElementById('sustain-toggle');
+            const filterFrequencyLabel = document.getElementById('filter-frequency-label');
+            const themeToggle = document.getElementById('theme-toggle');
+
+            let isSustainOn = false;
+            let currentEffect = null;
+
+            // 更新音量标签
+            volumeInput.addEventListener('input', () => {
+                volumeLabel.textContent = `${Math.round(volumeInput.value * 100)}%`;
+            });
+
+            // 实现 Sustain 功能
+            sustainToggle.addEventListener('click', () => {
+                isSustainOn = !isSustainOn;
+                sustainToggle.textContent = isSustainOn ? 'On' : 'Off';
+                sustainToggle.style.backgroundColor = isSustainOn ? '#3498db' : '#95a5a6';
+            });
+
+            // 更新滤波器频率标签
+            filterFrequencyInput.addEventListener('input', () => {
+                filterFrequencyLabel.textContent = `${filterFrequencyInput.value} Hz`;
+            });
+
+            // 实现主题切换
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                themeToggle.textContent = document.body.classList.contains('dark-mode') ? 'Light Mode' : 'Dark Mode';
+            });
+
+            // 修改 playNote 函数以支持新功能
+            function playNote(note) {
+                if (!activeKeys.has(note)) {
+                    activeKeys.add(note);
+                    updateVisualizer();
+                    const keyElement = [...piano.children].find(k => k.dataset.note === note);
+                    if (keyElement) keyElement.style.transform = 'translateY(2px)';
+
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    const filter = audioContext.createBiquadFilter();
+                    
+                    // 设置滤波器
+                    filter.type = filterTypeSelect.value;
+                    filter.frequency.setValueAtTime(parseFloat(filterFrequencyInput.value), audioContext.currentTime);
+                    
+                    const frequency = getFrequency(note, parseInt(octaveInput.value));
+                    oscillator.type = getOscillatorType(instrumentSelect.value);
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(volumeInput.value, audioContext.currentTime);
+
+                    // 创建音效
+                    let effectNode = createEffect(effectSelect.value);
+
+                    // 连接音频节点
+                    oscillator.connect(gainNode);
+                    gainNode.connect(filter);
+                    filter.connect(effectNode);
+                    effectNode.connect(audioContext.destination);
+
+                    oscillator.start();
+                    keyElement.oscillator = oscillator;
+                    keyElement.gainNode = gainNode;
+
+                    // 实现 Sustain
+                    if (!isSustainOn) {
+                        gainNode.gain.setTargetAtTime(0, audioContext.currentTime + 0.1, 0.15);
+                    }
+
+                    if (isRecording) {
+                        recordedNotes.push({ note, time: audioContext.currentTime });
+                    }
+                }
+            }
+
+            // 修改 createEffect 函数以解决重复声明的问题
+            function createEffect(effectType) {
+                switch (effectType) {
+                    case 'reverb':
+                        // 简单的混响效果
+                        const reverbDelay = audioContext.createDelay();
+                        reverbDelay.delayTime.value = 0.1;
+                        return reverbDelay;
+                    case 'delay':
+                        const delayNode = audioContext.createDelay();
+                        delayNode.delayTime.value = 0.3;
+                        return delayNode;
+                    case 'distortion':
+                        const distortion = audioContext.createWaveShaper();
+                        distortion.curve = makeDistortionCurve(400);
+                        return distortion;
+                    case 'chorus':
+                        // 简单的合唱效果
+                        const chorus = audioContext.createDelay();
+                        chorus.delayTime.value = 0.03;
+                        const chorusLFO = audioContext.createOscillator();
+                        chorusLFO.frequency.value = 0.1;
+                        chorusLFO.connect(chorus.delayTime);
+                        chorusLFO.start();
+                        return chorus;
+                    default:
+                        return audioContext.createGain(); // 无效果时返回一个增益节点
+                }
+            }
+
+            // 失真效果的辅助函数
+            function makeDistortionCurve(amount) {
+                const k = typeof amount === 'number' ? amount : 50;
+                const n_samples = 44100;
+                const curve = new Float32Array(n_samples);
+                const deg = Math.PI / 180;
+                for (let i = 0; i < n_samples; ++i) {
+                    const x = i * 2 / n_samples - 1;
+                    curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+                }
+                return curve;
+            }
+
+            // 修改 stopNote 函数以支持 Sustain
+            function stopNote(note) {
+                if (activeKeys.has(note)) {
+                    activeKeys.delete(note);
+                    updateVisualizer();
+                    const keyElement = [...piano.children].find(k => k.dataset.note === note);
+                    if (keyElement) {
+                        keyElement.style.transform = 'translateY(0)';
+                        if (keyElement.oscillator && keyElement.gainNode) {
+                            if (isSustainOn) {
+                                keyElement.gainNode.gain.setTargetAtTime(0, audioContext.currentTime, 0.5);
+                            } else {
+                                keyElement.oscillator.stop();
+                            }
+                            delete keyElement.oscillator;
+                            delete keyElement.gainNode;
+                        }
+                    }
+                }
+            }
+
+            function updateVisualizer() {
+                visualizer.textContent = activeKeys.size > 0 ? Array.from(activeKeys).join(', ') : 'No Active Notes';
+            }
+
+            function getFrequency(note, octave) {
+                const A4 = 440;
+                const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                const semitone = notes.indexOf(note);
+                const n = semitone + (octave - 4) * 12;
+                return A4 * Math.pow(2, n / 12);
+            }
+
+            function getOscillatorType(instrument) {
+                switch (instrument) {
+                    case 'synth': return 'sawtooth';
+                    case 'guitar': return 'triangle';
+                    case 'organ': return 'square';
+                    case 'flute': return 'sine';
+                    case 'violin': return 'sawtooth';
+                    case 'harpsichord': return 'square';
+                    case 'trumpet': return 'sawtooth';
+                    case 'saxophone': return 'sawtooth';
+                    case 'cello': return 'sawtooth';
+                    case 'piano':
+                    default: return 'sine';
+                }
+            }
+
+            startRecordingButton.addEventListener('click', () => {
+                isRecording = true;
+                recordedNotes.length = 0;
+                startRecordingButton.style.display = 'none';
+                stopRecordingButton.style.display = 'inline-block';
+            });
+
+            stopRecordingButton.addEventListener('click', () => {
+                isRecording = false;
+                stopRecordingButton.style.display = 'none';
+                startRecordingButton.style.display = 'inline-block';
+                playRecordingButton.disabled = recordedNotes.length === 0;
+            });
+
+            playRecordingButton.addEventListener('click', () => {
+                if (recordedNotes.length > 0) {
+                    const startTime = recordedNotes[0].time;
+                    recordedNotes.forEach((record) => {
+                        setTimeout(() => {
+                            playNoteForRecording(record.note);
+                        }, (record.time - startTime) * 1000);
+                    });
+                }
+            });
+
+            function playNoteForRecording(note) {
+                playNote(note);
+                setTimeout(() => stopNote(note), 500);
+            }
+
+            // Preloaded Song Format Update
+            const preloadedSongs = {
+                "Twinkle Twinkle": [
+                    { note: 'C', time: 0 }, { note: 'C', time: 0.5 }, { note: 'G', time: 1 }, { note: 'G', time: 1.5 },
+                    { note: 'A', time: 2 }, { note: 'A', time: 2.5 }, { note: 'G', time: 3 },
+                    { note: 'F', time: 4 }, { note: 'F', time: 4.5 }, { note: 'E', time: 5 },
+                    { note: 'E', time: 5.5 }, { note: 'D', time: 6 }, { note: 'D', time: 6.5 },
+                    { note: 'C', time: 7 }
+                ],
+                "Happy Birthday": [
+                    { note: 'G', time: 0 }, { note: 'G', time: 0.5 }, { note: 'A', time: 1 }, { note: 'G', time: 1.5 },
+                    { note: 'C', time: 2 }, { note: 'B', time: 2.5 }
+                ],
+                "Beethoven's Ode to Joy": [
+    { note: 'E', time: 0 }, { note: 'E', time: 0.5 }, { note: 'F', time: 1 }, { note: 'G', time: 1.5 },
+    { note: 'G', time: 2 }, { note: 'F', time: 2.5 }, { note: 'E', time: 3 }, { note: 'D', time: 3.5 },
+    { note: 'C', time: 4 }, { note: 'C', time: 4.5 }, { note: 'D', time: 5 }, { note: 'E', time: 5.5 },
+    { note: 'E', time: 6 }, { note: 'D', time: 6.5 }, { note: 'D', time: 7 },
+    { note: 'E', time: 8 }, { note: 'E', time: 8.5 }, { note: 'F', time: 9 }, { note: 'G', time: 9.5 },
+    { note: 'G', time: 10 }, { note: 'F', time: 10.5 }, { note: 'E', time: 11 }, { note: 'D', time: 11.5 },
+    { note: 'C', time: 12 }, { note: 'C', time: 12.5 }, { note: 'D', time: 13 }, { note: 'E', time: 13.5 },
+    { note: 'D', time: 14 }, { note: 'C', time: 14.5 }, { note: 'C', time: 15 }
+],
+
+                  "Jingle Bells":[
+    { note: 'E', time: 0 }, { note: 'E', time: 0.5 }, { note: 'E', time: 1 },
+    { note: 'E', time: 1.5 }, { note: 'E', time: 2 }, { note: 'E', time: 2.5 },
+    { note: 'E', time: 3 }, { note: 'G', time: 3.5 }, { note: 'C', time: 4 }, { note: 'D', time: 4.5 }, { note: 'E', time: 5 },
+    { note: 'F', time: 5.5 }, { note: 'F', time: 6 }, { note: 'F', time: 6.5 }, { note: 'F', time: 7 },
+    { note: 'F', time: 7.5 }, { note: 'E', time: 8 }, { note: 'E', time: 8.5 }, { note: 'E', time: 9 },
+    { note: 'E', time: 9.5 }, { note: 'E', time: 10 }, { note: 'D', time: 10.5 }, { note: 'D', time: 11 },
+    { note: 'E', time: 11.5 }, { note: 'D', time: 12 }, { note: 'G', time: 12.5 }
+],
+                  "Fur Elise by Beethoven":[
+    { note: 'E', time: 0 }, { note: 'D#', time: 0.5 }, { note: 'E', time: 1 }, { note: 'D#', time: 1.5 },
+    { note: 'E', time: 2 }, { note: 'B', time: 2.5 }, { note: 'D', time: 3 }, { note: 'C', time: 3.5 },
+    { note: 'A', time: 4 }, { note: 'C', time: 5 }, { note: 'E', time: 5.5 }, { note: 'A', time: 6 },
+    { note: 'B', time: 6.5 }, { note: 'E', time: 7 }, { note: 'G#', time: 7.5 }, { note: 'B', time: 8 },
+    { note: 'C', time: 8.5 }, { note: 'E', time: 9 }, { note: 'E', time: 9.5 }, { note: 'D#', time: 10 },
+    { note: 'E', time: 10.5 }, { note: 'D#', time: 11 }, { note: 'E', time: 11.5 }
+],
+                   "Bach Minuet in G":[
+    { note: 'D', time: 0 }, { note: 'E', time: 0.5 }, { note: 'F#', time: 1 }, { note: 'G', time: 1.5 },
+    { note: 'A', time: 2 }, { note: 'B', time: 2.5 }, { note: 'C', time: 3 }, { note: 'D', time: 3.5 },
+    { note: 'E', time: 4 }, { note: 'F#', time: 4.5 }, { note: 'G', time: 5 }, { note: 'F#', time: 5.5 },
+    { note: 'E', time: 6 }, { note: 'D', time: 6.5 }, { note: 'C', time: 7 }, { note: 'B', time: 7.5 },
+    { note: 'A', time: 8 }, { note: 'G', time: 8.5 }, { note: 'F#', time: 9 }, { note: 'E', time: 9.5 },
+    { note: 'D', time: 10 }, { note: 'C', time: 10.5 }, { note: 'D', time: 11 }
+],
+        "Sakura Sakura (Japan)": [
+            { note: 'E', time: 0 }, { note: 'F#', time: 0.5 }, { note: 'A', time: 1 }, { note: 'B', time: 1.5 },
+            { note: 'C', time: 2 }, { note: 'B', time: 2.5 }, { note: 'A', time: 3 },
+            { note: 'G', time: 4 }, { note: 'A', time: 4.5 }, { note: 'B', time: 5 },
+            { note: 'C', time: 5.5 }, { note: 'B', time: 6 }, { note: 'A', time: 6.5 },
+            { note: 'G', time: 7 }
+        ],
+        "La Cucaracha (Mexico)": [
+            { note: 'C', time: 0 }, { note: 'E', time: 0.5 }, { note: 'C', time: 1 }, { note: 'E', time: 1.5 },
+            { note: 'G', time: 2 }, { note: 'G', time: 2.5 }, { note: 'G', time: 3 },
+            { note: 'A', time: 4 }, { note: 'A', time: 4.5 }, { note: 'A', time: 5 },
+            { note: 'G', time: 5.5 }, { note: 'F', time: 6 }, { note: 'E', time: 6.5 },
+            { note: 'D', time: 7 }
+        ],
+        "Frere Jacques (France)": [
+            { note: 'C', time: 0 }, { note: 'D', time: 0.5 }, { note: 'E', time: 1 }, { note: 'C', time: 1.5 },
+            { note: 'C', time: 2 }, { note: 'D', time: 2.5 }, { note: 'E', time: 3 }, { note: 'C', time: 3.5 },
+            { note: 'E', time: 4 }, { note: 'F', time: 4.5 }, { note: 'G', time: 5 },
+            { note: 'E', time: 5.5 }, { note: 'F', time: 6 }, { note: 'G', time: 6.5 }
+        ],
+        "Kalinka (Russia)": [
+            { note: 'G', time: 0 }, { note: 'G', time: 0.5 }, { note: 'E', time: 1 }, { note: 'G', time: 1.5 },
+            { note: 'C', time: 2 }, { note: 'D', time: 2.5 }, { note: 'E', time: 3 },
+            { note: 'G', time: 4 }, { note: 'G', time: 4.5 }, { note: 'E', time: 5 },
+            { note: 'D', time: 5.5 }, { note: 'C', time: 6 }
+        ],        "Jasmine Flower (茉莉花)": [
+            { note: 'E', time: 0 }, { note: 'G', time: 0.5 }, { note: 'A', time: 1 }, { note: 'A', time: 1.5 },
+            { note: 'G', time: 2 }, { note: 'E', time: 2.5 }, { note: 'G', time: 3 }, { note: 'E', time: 4 },
+            { note: 'D', time: 4.5 }, { note: 'E', time: 5 }, { note: 'F#', time: 5.5 }, { note: 'G', time: 6 }
+        ],
+        "Butterfly Lovers (梁祝)": [
+            { note: 'G', time: 0 }, { note: 'E', time: 0.5 }, { note: 'F#', time: 1 }, { note: 'G', time: 1.5 },
+            { note: 'A', time: 2 }, { note: 'A', time: 2.5 }, { note: 'G', time: 3 }, { note: 'F#', time: 3.5 },
+            { note: 'E', time: 4 }, { note: 'G', time: 5 }, { note: 'E', time: 6 }
+        ],
+        "The Moon Represents My Heart (月亮代表我的心)": [
+            { note: 'C', time: 0 }, { note: 'E', time: 0.5 }, { note: 'G', time: 1 }, { note: 'G', time: 1.5 },
+            { note: 'A', time: 2 }, { note: 'G', time: 2.5 }, { note: 'E', time: 3 }, { note: 'C', time: 3.5 },
+            { note: 'D', time: 4 }, { note: 'E', time: 4.5 }, { note: 'C', time: 5 }
+        ],
+        "Farewell (送别)": [
+            { note: 'G', time: 0 }, { note: 'A', time: 0.5 }, { note: 'B', time: 1 }, { note: 'C', time: 1.5 },
+            { note: 'D', time: 2 }, { note: 'D', time: 2.5 }, { note: 'C', time: 3 }, { note: 'B', time: 3.5 },
+            { note: 'A', time: 4 }, { note: 'G', time: 4.5 }, { note: 'A', time: 5 }, { note: 'B', time: 5.5 },
+            { note: 'C', time: 6 }
+        ],
+        "A Beautiful Night (良宵)": [
+            { note: 'D', time: 0 }, { note: 'E', time: 0.5 }, { note: 'F#', time: 1 }, { note: 'G', time: 1.5 },
+            { note: 'A', time: 2 }, { note: 'G', time: 2.5 }, { note: 'F#', time: 3 }, { note: 'E', time: 3.5 },
+            { note: 'D', time: 4 }, { note: 'G', time: 4.5 }, { note: 'A', time: 5 }, { note: 'F#', time: 5.5 }
+        ],
+
+
+        "La Cucaracha (Mexico)": [
+             { note: "G", time: 0 }, { note: "G", time: 0.5 }, { note: "A", time: 1 }, { note: "B", time: 1.5 },
+             { note: "C", time: 2 }, { note: "C", time: 2.5 }, { note: "B", time: 3 }, { note: "A", time: 3.5 },
+             { note: "G", time: 4 }, { note: "E", time: 4.5 }, { note: "G", time: 5 }, { note: "F#", time: 5.5 },
+             { note: "A", time: 6 }, { note: "B", time: 6.5 }, { note: "C", time: 7 }, { note: "B", time: 7.5 }
+  ],
+
+
+
+        "Waltzing Matilda (Australia)": [
+             { note: "G", time: 0 }, { note: "E", time: 0.5 }, { note: "D", time: 1 }, { note: "G", time: 1.5 },
+             { note: "C", time: 2 }, { note: "E", time: 2.5 }, { note: "F", time: 3 }, { note: "G", time: 3.5 },
+             { note: "A", time: 4 }, { note: "G", time: 4.5 }, { note: "E", time: 5 }, { note: "C", time: 5.5 },
+             { note: "D", time: 6 }, { note: "E", time: 6.5 }, { note: "G", time: 7 }
+  ],
+
+        "Guantanamera (Cuba)": [
+             { note: "G", time: 0 }, { note: "G", time: 0.5 }, { note: "G", time: 1 }, { note: "E", time: 1.5 },
+             { note: "G", time: 2 }, { note: "G", time: 2.5 }, { note: "E", time: 3 }, { note: "D", time: 3.5 },
+             { note: "E", time: 4 }, { note: "C", time: 4.5 }, { note: "D", time: 5 }, { note: "C", time: 5.5 },
+             { note: "E", time: 6 }, { note: "G", time: 6.5 }, { note: "E", time: 7 }
+  ],
+
+        "Bella Ciao (Italy)": [
+             { note: "C", time: 0 }, { note: "D", time: 0.5 }, { note: "E", time: 1 }, { note: "D", time: 1.5 },
+             { note: "C", time: 2 }, { note: "E", time: 2.5 }, { note: "G", time: 3 }, { note: "A", time: 3.5 },
+             { note: "G", time: 4 }, { note: "E", time: 4.5 }, { note: "C", time: 5 }, { note: "D", time: 5.5 },
+             { note: "E", time: 6 }, { note: "G", time: 6.5 }, { note: "A", time: 7 }
+  ],
+
+        "Danny Boy (Ireland)": [
+             { note: "E", time: 0 }, { note: "G", time: 0.5 }, { note: "A", time: 1 }, { note: "B", time: 1.5 },
+             { note: "C", time: 2 }, { note: "D", time: 2.5 }, { note: "E", time: 3 }, { note: "F#", time: 3.5 },
+             { note: "G", time: 4 }, { note: "A", time: 4.5 }, { note: "G", time: 5 }, { note: "E", time: 5.5 },
+             { note: "F#", time: 6 }, { note: "G", time: 6.5 }, { note: "A", time: 7 }
+  ],
+
+        "Hava Nagila (Israel)": [
+             { note: "G", time: 0 }, { note: "A", time: 0.5 }, { note: "B", time: 1 }, { note: "A", time: 1.5 },
+             { note: "G", time: 2 }, { note: "E", time: 2.5 }, { note: "F#", time: 3 }, { note: "G", time: 3.5 },
+             { note: "A", time: 4 }, { note: "B", time: 4.5 }, { note: "A", time: 5 }, { note: "G", time: 5.5 },
+             { note: "B", time: 6 }, { note: "A", time: 6.5 }, { note: "G", time: 7 }
+  ],
+
+        "Scarborough Fair (England)": [
+             { note: "A", time: 0 }, { note: "B", time: 0.5 }, { note: "C#", time: 1 }, { note: "B", time: 1.5 },
+             { note: "A", time: 2 }, { note: "G", time: 2.5 }, { note: "E", time: 3 },  { note: "G", time: 3.5 },
+             { note: "A", time: 4 }, { note: "B", time: 4.5 }, { note: "C#", time: 5 }, { note: "D", time: 5.5 },
+             { note: "E", time: 6 }, { note: "F#", time: 6.5 }, { note: "G", time: 7 }
+  ],
+
+
+
+        "Auld Lang Syne (Scotland)": [
+             { note: "G", time: 0 }, { note: "E", time: 0.5 }, { note: "G", time: 1 }, { note: "A", time: 1.5 },
+             { note: "G", time: 2 }, { note: "D", time: 2.5 }, { note: "G", time: 3 }, { note: "A", time: 3.5 },
+             { note: "B", time: 4 }, { note: "G", time: 4.5 }, { note: "E", time: 5 }, { note: "G", time: 5.5 },
+             { note: "A", time: 6 }, { note: "B", time: 6.5 }, { note: "C", time: 7 }
+  ],
+         "Basshunter - DotA": [
+            { note: "E", time: 0 }, { note: "G", time: 0.5 }, { note: "A", time: 1 }, { note: "E", time: 1.5 },
+            { note: "G", time: 2 }, { note: "B", time: 2.5 }, { note: "A", time: 3 }, { note: "G", time: 3.5 },
+            { note: "E", time: 4 }, { note: "E", time: 4.5 }, { note: "G", time: 5 }, { note: "A", time: 5.5 },
+            { note: "B", time: 6 }, { note: "G", time: 6.5 }, { note: "A", time: 7 }, { note: "E", time: 7.5 }
+        ],
+
+        "Daft Punk - One More Time": [
+            { note: "G", time: 0 }, { note: "B", time: 0.5 }, { note: "C", time: 1 }, { note: "D", time: 1.5 },
+            { note: "C", time: 2 }, { note: "B", time: 2.5 }, { note: "G", time: 3 }, { note: "B", time: 3.5 },
+            { note: "C", time: 4 }, { note: "D", time: 4.5 }, { note: "E", time: 5 }, { note: "G", time: 5.5 },
+            { note: "C", time: 6 }, { note: "D", time: 6.5 }, { note: "B", time: 7 }, { note: "G", time: 7.5 }
+],
+
+        "Deadmau5 - Strobe": [
+            { note: "C", time: 0 }, { note: "E", time: 0.5 }, { note: "G", time: 1 }, { note: "B", time: 1.5 },
+            { note: "C", time: 2 }, { note: "D", time: 2.5 }, { note: "E", time: 3 }, { note: "G", time: 3.5 },
+            { note: "B", time: 4 }, { note: "C", time: 4.5 }, { note: "D", time: 5 }, { note: "E", time: 5.5 },
+            { note: "G", time: 6 }, { note: "B", time: 6.5 }, { note: "C", time: 7 }, { note: "E", time: 7.5 }
+],
+
+        "Avicii - Levels": [
+            { note: "E", time: 0 }, { note: "G#", time: 0.5 }, { note: "B", time: 1 }, { note: "E", time: 1.5 },
+            { note: "G#", time: 2 }, { note: "B", time: 2.5 }, { note: "C#", time: 3 }, { note: "E", time: 3.5 },
+            { note: "G#", time: 4 }, { note: "B", time: 4.5 }, { note: "C#", time: 5 }, { note: "E", time: 5.5 },
+            { note: "B", time: 6 }, { note: "G#", time: 6.5 }, { note: "E", time: 7 }, { note: "C#", time: 7.5 }
+],
+
+        "The Chainsmokers - Closer": [
+            { note: "C", time: 0 }, { note: "D", time: 0.5 }, { note: "E", time: 1 }, { note: "G", time: 1.5 },
+            { note: "A", time: 2 }, { note: "G", time: 2.5 }, { note: "E", time: 3 }, { note: "D", time: 3.5 },
+            { note: "C", time: 4 }, { note: "D", time: 4.5 }, { note: "E", time: 5 }, { note: "G", time: 5.5 },
+            { note: "A", time: 6 }, { note: "G", time: 6.5 }, { note: "E", time: 7 }, { note: "C", time: 7.5 }
+        ],
+        "Super Mario Bros - Overworld Theme": [
+            { note: "E", time: 0 }, { note: "E", time: 0.5 }, { note: "E", time: 1 }, { note: "C", time: 1.5 },
+            { note: "E", time: 2 }, { note: "G", time: 2.5 }, { note: "G", time: 3 }, { note: "C", time: 3.5 },
+            { note: "E", time: 4 }, { note: "A", time: 4.5 }, { note: "B", time: 5 }, { note: "B", time: 5.5 },
+            { note: "A", time: 6 }, { note: "G", time: 6.5 }, { note: "E", time: 7 }, { note: "C", time: 7.5 }
+  ],
+
+        "The Legend of Zelda - Main Theme": [
+            { note: "B", time: 0 }, { note: "D", time: 0.5 }, { note: "E", time: 1 }, { note: "F#", time: 1.5 },
+            { note: "G", time: 2 }, { note: "E", time: 2.5 }, { note: "F#", time: 3 }, { note: "E", time: 3.5 },
+            { note: "D", time: 4 }, { note: "B", time: 4.5 }, { note: "A", time: 5 }, { note: "G", time: 5.5 },
+            { note: "A", time: 6 }, { note: "B", time: 6.5 }, { note: "E", time: 7 }, { note: "D", time: 7.5 }
+  ],
+
+        "Contra - Jungle Theme": [
+            { note: "E", time: 0 }, { note: "G", time: 0.5 }, { note: "B", time: 1 }, { note: "E", time: 1.5 },
+            { note: "G", time: 2 }, { note: "B", time: 2.5 }, { note: "D", time: 3 }, { note: "E", time: 3.5 },
+            { note: "F#", time: 4 }, { note: "G", time: 4.5 }, { note: "B", time: 5 }, { note: "E", time: 5.5 },
+            { note: "G", time: 6 }, { note: "B", time: 6.5 }, { note: "D", time: 7 }, { note: "E", time: 7.5 }
+        ],
+        "云宫迅音 (Yun Gong Xun Yin)":  [
+    { note: "C", time: 0 }, { note: "E", time: 0.5 }, { note: "G", time: 1 }, { note: "C", time: 1.5 },
+    { note: "E", time: 2 }, { note: "G", time: 2.5 }, { note: "B", time: 3 }, { note: "C", time: 3.5 },
+    { note: "D", time: 4 }, { note: "E", time: 4.5 }, { note: "F#", time: 5 }, { note: "G", time: 5.5 },
+    { note: "A", time: 6 }, { note: "B", time: 6.5 }, { note: "C", time: 7 }, { note: "D", time: 7.5 },
+    { note: "E", time: 8 }, { note: "G", time: 8.5 }, { note: "A", time: 9 }, { note: "B", time: 9.5 },
+    { note: "C", time: 10 }, { note: "E", time: 10.5 }, { note: "G", time: 11 }, { note: "B", time: 11.5 },
+    { note: "C", time: 12 }, { note: "D", time: 12.5 }, { note: "E", time: 13 }, { note: "F#", time: 13.5 },
+    { note: "G", time: 14 }, { note: "A", time: 14.5 }, { note: "B", time: 15 }, { note: "C", time: 15.5 },
+    { note: "D", time: 16 }, { note: "E", time: 16.5 }, { note: "F#", time: 17 }, { note: "G", time: 17.5 },
+    { note: "A", time: 18 }, { note: "B", time: 18.5 }, { note: "C", time: 19 }, { note: "E", time: 19.5 },
+    { note: "G", time: 20 }, { note: "B", time: 20.5 }, { note: "C", time: 21 }, { note: "D", time: 21.5 },
+    { note: "E", time: 22 }, { note: "G", time: 22.5 }, { note: "A", time: 23 }, { note: "B", time: 23.5 },
+    { note: "C", time: 24 }, { note: "E", time: 24.5 }, { note: "G", time: 25 }, { note: "B", time: 25.5 },
+    { note: "C", time: 26 }, { note: "D", time: 26.5 }, { note: "E", time: 27 }, { note: "F#", time: 27.5 },
+    { note: "G", time: 28 }, { note: "A", time: 28.5 }, { note: "B", time: 29 }, { note: "C", time: 29.5 },
+    { note: "D", time: 30 }, { note: "E", time: 30.5 }, { note: "F#", time: 31 }, { note: "G", time: 31.5 },
+    { note: "A", time: 32 }, { note: "B", time: 32.5 }, { note: "C", time: 33 }, { note: "D", time: 33.5 },
+    { note: "E", time: 34 }, { note: "F#", time: 34.5 }, { note: "G", time: 35 }, { note: "A", time: 35.5 },
+    { note: "B", time: 36 }, { note: "C", time: 36.5 }, { note: "D", time: 37 }, { note: "E", time: 37.5 },
+    { note: "F#", time: 38 }, { note: "G", time: 38.5 }, { note: "A", time: 39 }, { note: "B", time: 39.5 },
+    { note: "C", time: 40 }, { note: "E", time: 40.5 }, { note: "G", time: 41 }, { note: "B", time: 41.5 },
+    { note: "C", time: 42 }, { note: "D", time: 42.5 }, { note: "E", time: 43 }, { note: "F#", time: 43.5 },
+    { note: "G", time: 44 }, { note: "A", time: 44.5 }, { note: "B", time: 45 }, { note: "C", time: 45.5 },
+    { note: "D", time: 46 }, { note: "E", time: 46.5 }, { note: "F#", time: 47 }, { note: "G", time: 47.5 },
+    { note: "A", time: 48 }, { note: "B", time: 48.5 }, { note: "C", time: 49 }, { note: "D", time: 49.5 },
+    { note: "E", time: 50 }, { note: "F#", time: 50.5 }, { note: "G", time: 51 }, { note: "A", time: 51.5 },
+    { note: "B", time: 52 }, { note: "C", time: 52.5 }, { note: "D", time: 53 }, { note: "E", time: 53.5 },
+    { note: "F#", time: 54 }, { note: "G", time: 54.5 }, { note: "A", time: 55 }, { note: "B", time: 55.5 }
+  ],
+  "Tetris - Theme A": [
+    { note: "E", time: 0 }, { note: "B", time: 0.5 }, { note: "C", time: 1 }, { note: "D", time: 1.5 },
+    { note: "C", time: 2 }, { note: "B", time: 2.5 }, { note: "A", time: 3 }, { note: "A", time: 3.5 },
+    { note: "C", time: 4 }, { note: "E", time: 4.5 }, { note: "A", time: 5 }, { note: "B", time: 5.5 },
+    { note: "B", time: 6 }, { note: "A", time: 6.5 }, { note: "G", time: 7 }, { note: "G", time: 7.5 },
+    { note: "C", time: 8 }, { note: "E", time: 8.5 }, { note: "G", time: 9 }, { note: "C", time: 9.5 },
+    { note: "E", time: 10 }, { note: "D", time: 10.5 }, { note: "C", time: 11 }, { note: "B", time: 11.5 },
+    { note: "A", time: 12 }, { note: "A", time: 12.5 }, { note: "C", time: 13 }, { note: "E", time: 13.5 },
+    { note: "A", time: 14 }, { note: "B", time: 14.5 }, { note: "C", time: 15 }, { note: "D", time: 15.5 },
+    { note: "E", time: 16 }, { note: "C", time: 16.5 }, { note: "A", time: 17 }, { note: "A", time: 17.5 }
+  ], 
+   "Kimi Ga Yo (君が代)": [
+    { note: "G", time: 0 }, { note: "A", time: 0.5 }, { note: "B", time: 1 }, { note: "C", time: 1.5 },
+    { note: "D", time: 2 }, { note: "C", time: 2.5 }, { note: "B", time: 3 }, { note: "A", time: 3.5 },
+    { note: "G", time: 4 }, { note: "E", time: 4.5 }, { note: "D", time: 5 }, { note: "C", time: 5.5 },
+    { note: "B", time: 6 }, { note: "A", time: 6.5 }, { note: "G", time: 7 }, { note: "F#", time: 7.5 }
+  ],
+
+ 
+
+  "Senbonzakura (千本桜)": [
+    { note: "D", time: 0 }, { note: "E", time: 0.5 }, { note: "F#", time: 1 }, { note: "G", time: 1.5 },
+    { note: "A", time: 2 }, { note: "B", time: 2.5 }, { note: "C#", time: 3 }, { note: "D", time: 3.5 },
+    { note: "E", time: 4 }, { note: "F#", time: 4.5 }, { note: "G", time: 5 }, { note: "A", time: 5.5 },
+    { note: "B", time: 6 }, { note: "C#", time: 6.5 }, { note: "D", time: 7 }, { note: "E", time: 7.5 }
+  ],
+ " Bad Apple!!": [
+    { note: "C", time: 0 }, { note: "E", time: 0.5 }, { note: "G", time: 1 }, { note: "A", time: 1.5 },
+    { note: "B", time: 2 }, { note: "C", time: 2.5 }, { note: "E", time: 3 }, { note: "G", time: 3.5 },
+    { note: "A", time: 4 }, { note: "B", time: 4.5 }, { note: "C", time: 5 }, { note: "D", time: 5.5 },
+    { note: "E", time: 6 }, { note: "G", time: 6.5 }, { note: "A", time: 7 }, { note: "B", time: 7.5 },
+    { note: "C", time: 8 }, { note: "E", time: 8.5 }, { note: "G", time: 9 }, { note: "A", time: 9.5 },
+    { note: "B", time: 10 }, { note: "C", time: 10.5 }, { note: "D", time: 11 }, { note: "E", time: 11.5 },
+    { note: "G", time: 12 }, { note: "A", time: 12.5 }, { note: "B", time: 13 }, { note: "C", time: 13.5 },
+    { note: "D", time: 14 }, { note: "E", time: 14.5 }, { note: "G", time: 15 }, { note: "A", time: 15.5 },
+    { note: "B", time: 16 }, { note: "C", time: 16.5 }, { note: "D", time: 17 }, { note: "E", time: 17.5 },
+    { note: "G", time: 18 }, { note: "A", time: 18.5 }, { note: "B", time: 19 }, { note: "C", time: 19.5 },
+    { note: "D", time: 20 }, { note: "E", time: 20.5 }, { note: "F#", time: 21 }, { note: "G", time: 21.5 },
+    { note: "A", time: 22 }, { note: "B", time: 22.5 }, { note: "C", time: 23 }, { note: "D", time: 23.5 },
+    { note: "E", time: 24 }, { note: "F#", time: 24.5 }, { note: "G", time: 25 }, { note: "A", time: 25.5 },
+    { note: "B", time: 26 }, { note: "C", time: 26.5 }, { note: "D", time: 27 }, { note: "E", time: 27.5 },
+    { note: "G", time: 28 }, { note: "A", time: 28.5 }, { note: "B", time: 29 }, { note: "C", time: 29.5 },
+    { note: "D", time: 30 }, { note: "E", time: 30.5 }, { note: "F#", time: 31 }, { note: "G", time: 31.5 },
+    { note: "A", time: 32 }, { note: "B", time: 32.5 }, { note: "C", time: 33 }, { note: "D", time: 33.5 },
+    { note: "E", time: 34 }, { note: "G", time: 34.5 }, { note: "A", time: 35 }, { note: "B", time: 35.5 },
+    { note: "C", time: 36 }, { note: "D", time: 36.5 }, { note: "E", time: 37 }, { note: "F#", time: 37.5 },
+    { note: "G", time: 38 }, { note: "A", time: 38.5 }, { note: "B", time: 39 }, { note: "C", time: 39.5 },
+    { note: "D", time: 40 }, { note: "E", time: 40.5 }, { note: "F#", time: 41 }, { note: "G", time: 41.5 },
+    { note: "A", time: 42 }, { note: "B", time: 42.5 }, { note: "C", time: 43 }, { note: "D", time: 43.5 }
+  ],
+  "PPAP (Pen-Pineapple-Apple-Pen)": [
+    { note: "C", time: 0 }, { note: "C", time: 0.5 }, { note: "G", time: 1 }, { note: "G", time: 1.5 },
+    { note: "A", time: 2 }, { note: "A", time: 2.5 }, { note: "G", time: 3 }, { note: "F", time: 3.5 },
+    { note: "F", time: 4 }, { note: "E", time: 4.5 }, { note: "E", time: 5 }, { note: "D", time: 5.5 },
+    { note: "D", time: 6 }, { note: "C", time: 6.5 }, { note: "C", time: 7 }, { note: "G", time: 7.5 }
+  ],
+
+  "Baby Shark": [
+    { note: "D", time: 0 }, { note: "D", time: 0.5 }, { note: "G", time: 1 }, { note: "G", time: 1.5 },
+    { note: "A", time: 2 }, { note: "A", time: 2.5 }, { note: "G", time: 3 }, { note: "G", time: 3.5 },
+    { note: "G", time: 4 }, { note: "G", time: 4.5 }, { note: "A", time: 5 }, { note: "A", time: 5.5 },
+    { note: "G", time: 6 }, { note: "F", time: 6.5 }, { note: "E", time: 7 }, { note: "D", time: 7.5 }
+  ]
+
+
+
+
+
+
+            };
+
+            function playPreloadedSong(songName) {
+                const song = preloadedSongs[songName];
+                if (song) {
+                    const startTime = audioContext.currentTime;
+                    song.forEach(record => {
+                        setTimeout(() => {
+                            playNoteForRecording(record.note);
+                        }, (record.time) * 1000);
+                    });
+                }
+            }
+
+            // 修改预置音乐部分
+            const presetSongsToggle = document.querySelector('.preset-songs-toggle');
+            const presetSongsList = document.getElementById('preset-songs-list');
+
+            presetSongsToggle.addEventListener('click', () => {
+                presetSongsList.classList.toggle('show');
+                presetSongsToggle.classList.toggle('active');
+            });
+
+            Object.keys(preloadedSongs).forEach(songName => {
+                const button = document.createElement('button');
+                button.textContent = `播放 ${songName}`;
+                button.addEventListener('click', () => playPreloadedSong(songName));
+                presetSongsList.appendChild(button);
+            });
+        });
+    </script>
+</body>
+</html>

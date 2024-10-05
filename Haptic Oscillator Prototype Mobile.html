@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Haptic Oscillator</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to bottom, #89f7fe, #66a6ff);
+      color: #333;
+    }
+
+    .interactive-area {
+      position: relative;
+      width: 100%;
+      height: 60vh;
+      margin-top: 20px;
+      background: #e0e0e0;
+      border-radius: 12px;
+      border: 2px solid #999;
+      overflow: hidden;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+      touch-action: none;
+    }
+
+    .circle {
+      background: rgba(0, 150, 255, 0.7);
+      border-radius: 50%;
+      position: absolute;
+      transition: width 0.1s, height 0.1s, transform 0.1s, background 0.3s;
+    }
+
+    .circle.short {
+      background: rgba(255, 100, 100, 0.7);
+    }
+
+    .control-panel {
+      margin-top: 20px;
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 12px;
+      display: inline-block;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .slider {
+      width: 80%;
+      margin: 10px 0;
+    }
+
+    button {
+      background: #66a6ff;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #4d91e3;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        font-size: 14px;
+      }
+
+      .control-panel {
+        width: 90%;
+        padding: 10px;
+      }
+
+      .slider {
+        width: 100%;
+      }
+
+      button {
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+
+      .interactive-area {
+        height: 50vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Haptic Oscillator</h1>
+  <button id="playButton">Play</button>
+  <div class="control-panel">
+    <label for="waveType">Wave Type:</label>
+    <select id="waveType">
+      <option value="sine">Sine</option>
+      <option value="square">Square</option>
+      <option value="sawtooth">Sawtooth</option>
+      <option value="triangle">Triangle</option>
+    </select>
+    <br>
+    <label for="volumeControl">Volume:</label>
+    <input type="range" id="volumeControl" class="slider" min="0" max="0.5" step="0.01" value="0.2">
+    <br>
+    <label for="detuneControl">Detune:</label>
+    <input type="range" id="detuneControl" class="slider" min="-100" max="100" step="1" value="0">
+    <br>
+    <label for="durationControl">Note Duration (ms):</label>
+    <input type="range" id="durationControl" class="slider" min="500" max="5000" step="100" value="2000">
+    <br>
+    <label for="lowpassControl">Lowpass Filter Frequency:</label>
+    <input type="range" id="lowpassControl" class="slider" min="500" max="10000" step="100" value="5000">
+  </div>
+  <p id="frequencyDisplay">Frequency: 440.00 Hz</p>
+  <div class="interactive-area" id="interactiveArea"></div>
+
+  <script>
+    let audioContext = null;
+    let oscillators = [];
+    let gainNodes = [];
+    let filters = [];
+    let isPlaying = false;
+    let isDragging = false;
+    let initialY = null;
+    let initialX = null;
+    let baseFrequency = null;
+    let activeCircle = null;
+
+    const playButton = document.getElementById('playButton');
+    const frequencyDisplay = document.getElementById('frequencyDisplay');
+    const interactiveArea = document.getElementById('interactiveArea');
+    const waveTypeSelect = document.getElementById('waveType');
+    const volumeControl = document.getElementById('volumeControl');
+    const detuneControl = document.getElementById('detuneControl');
+    const durationControl = document.getElementById('durationControl');
+    const lowpassControl = document.getElementById('lowpassControl');
+
+    playButton.addEventListener('click', () => {
+      if (!isPlaying) {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        isPlaying = true;
+        playButton.textContent = 'Stop';
+      } else {
+        stopAllOscillators();
+        isPlaying = false;
+        playButton.textContent = 'Play';
+      }
+    });
+
+    function stopAllOscillators() {
+      oscillators.forEach(osc => osc.stop());
+      oscillators = [];
+      gainNodes = [];
+      filters = [];
+      while (interactiveArea.firstChild) {
+        interactiveArea.removeChild(interactiveArea.firstChild);
+      }
+    }
+
+    function createOscillator(x, y, shortPress = false) {
+      if (!audioContext) return;
+
+      const rect = interactiveArea.getBoundingClientRect();
+      baseFrequency = Math.max(20, Math.min(((y / rect.height) * 440) + ((x / rect.width) * 440) + 20, 1000));
+      const volume = Math.min((rect.height - y) / rect.height, 0.5);
+
+      const circle = document.createElement('div');
+      circle.className = 'circle' + (shortPress ? ' short' : '');
+      updateCircleSize(circle, baseFrequency);
+      circle.style.left = `${x - parseFloat(circle.style.width) / 2}px`;
+      circle.style.top = `${y - parseFloat(circle.style.height) / 2}px`;
+      interactiveArea.appendChild(circle);
+
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      const filter = audioContext.createBiquadFilter();
+
+      oscillator.type = waveTypeSelect.value;
+      oscillator.frequency.setValueAtTime(baseFrequency, audioContext.currentTime);
+      oscillator.detune.setValueAtTime(detuneControl.value, audioContext.currentTime);
+
+      gainNode.gain.setValueAtTime(volume * volumeControl.value, audioContext.currentTime);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(lowpassControl.value, audioContext.currentTime);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(filter);
+      filter.connect(audioContext.destination);
+      oscillator.start();
+
+      oscillators.push(oscillator);
+      gainNodes.push(gainNode);
+      filters.push(filter);
+
+      if (shortPress) {
+        animateCircle(circle, 500, () => {
+          stopOscillator(oscillator, circle);
+        });
+      } else {
+        animateCircle(circle, durationControl.value, () => {
+          stopOscillator(oscillator, circle);
+        });
+      }
+    }
+
+    function stopOscillator(oscillator, circle) {
+      oscillator.stop();
+      if (circle.parentNode) {
+        interactiveArea.removeChild(circle);
+      }
+      oscillators = oscillators.filter(osc => osc !== oscillator);
+      gainNodes = gainNodes.filter(gain => gain !== oscillator);
+      filters = filters.filter(filt => filt !== oscillator);
+    }
+
+    function updateCircleSize(circle, frequency) {
+      const size = Math.max(20, Math.min((frequency / 1000) * 100, 100));
+      circle.style.width = `${size}px`;
+      circle.style.height = `${size}px`;
+    }
+
+    function animateCircle(circle, duration, callback) {
+      let start;
+      function step(timestamp) {
+        if (!start) start = timestamp;
+        const progress = timestamp - start;
+        if (progress < duration) {
+          circle.style.transform = `scale(${1 + progress / duration})`;
+          requestAnimationFrame(step);
+        } else {
+          callback();
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    interactiveArea.addEventListener('mousedown', (e) => {
+      if (!isPlaying) return;
+      isDragging = true;
+      initialY = e.clientY;
+      initialX = e.clientX;
+      const shortPress = e.detail === 1;
+      createOscillator(e.clientX - interactiveArea.getBoundingClientRect().left, e.clientY - interactiveArea.getBoundingClientRect().top, shortPress);
+    });
+
+    interactiveArea.addEventListener('mousemove', (e) => {
+      if (!isPlaying) return;
+      if (isDragging) {
+        const rect = interactiveArea.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const frequency = Math.max(20, Math.min(((y / rect.height) * 440) + ((x / rect.width) * 440) + 20, 1000));
+
+        createOscillator(x, y, false);
+
+        frequencyDisplay.textContent = `Frequency: ${frequency.toFixed(2)} Hz`;
+      }
+    });
+
+    interactiveArea.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    interactiveArea.addEventListener('mouseleave', () => {
+      isDragging = false;
+    });
+
+    interactiveArea.addEventListener('touchstart', (e) => {
+      if (!isPlaying) return;
+      isDragging = true;
+      const touch = e.touches[0];
+      initialY = touch.clientY;
+      initialX = touch.clientX;
+      createOscillator(touch.clientX - interactiveArea.getBoundingClientRect().left, touch.clientY - interactiveArea.getBoundingClientRect().top, true);
+    });
+
+    interactiveArea.addEventListener('touchmove', (e) => {
+      if (isDragging) {
+        const touch = e.touches[0];
+        const rect = interactiveArea.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        const frequency = Math.max(20, Math.min(((y / rect.height) * 440) + ((x / rect.width) * 440) + 20, 1000));
+
+        createOscillator(x, y, false);
+
+        frequencyDisplay.textContent = `Frequency: ${frequency.toFixed(2)} Hz`;
+      }
+    });
+
+    interactiveArea.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+  </script>
+</body>
+</html>
