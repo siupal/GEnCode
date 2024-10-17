@@ -1,35 +1,26 @@
-from .base_organism import Organism
-import random
+from .base_organism import BaseOrganism
+import pygame
+from config import GRID_SIZE, DECOMPOSER_ENERGY_GAIN_RATE
 
-class Decomposer(Organism):
-    def __init__(self, location, genes):
-        super().__init__('Decomposer', location, genes)
-        self.decomposition_efficiency = genes['decomposition_efficiency']
+class Decomposer(BaseOrganism):
+    def __init__(self, environment, position=None, genome=None):
+        super().__init__(environment, position, genome)
+        self.color = (128, 128, 128)  # 灰色
 
-    def act(self, action, environment):
-        if action == 'decompose':
-            self.decompose(environment)
-        elif action == 'move':
-            self.move(environment)
+    def update(self):
+        if super().update():
+            self.decompose()
+            return True
+        return False
 
-    def decompose(self, environment):
-        cell = environment.grid[self.location[1]][self.location[0]]
-        decomposed_matter = cell.organic_matter * self.decomposition_efficiency
-        self.energy += decomposed_matter
-        cell.organic_matter -= decomposed_matter
-        cell.nutrients += decomposed_matter * 0.5  # 一半的分解物质转化为养分
+    def decompose(self):
+        organic_matter = self.environment.soil_fertility[int(self.position[1])][int(self.position[0])]
+        energy_gain = organic_matter * self.genome.get_gene('energy_efficiency').value * DECOMPOSER_ENERGY_GAIN_RATE
+        self.energy += energy_gain
+        self.environment.soil_fertility[int(self.position[1])][int(self.position[0])] -= energy_gain * 0.1
+        self.environment.soil_fertility[int(self.position[1])][int(self.position[0])] = max(0, self.environment.soil_fertility[int(self.position[1])][int(self.position[0])])
 
-    def move(self, environment):
-        new_location = environment.get_nearby_empty_location(self.location)
-        if new_location:
-            environment.move_organism(self, new_location)
-            self.energy -= self.genes['movement_cost']
-
-    def reproduce(self, environment):
-        if self.energy > 150 and random.random() < self.genes['reproduction_rate']:
-            new_location = environment.get_nearby_empty_location(self.location)
-            if new_location:
-                new_genes = mutate_genes(self.genes)
-                new_decomposer = Decomposer(new_location, new_genes)
-                environment.add_organism(new_decomposer)
-                self.energy -= 75  # 繁殖消耗能量
+    def draw(self, screen):
+        pygame.draw.circle(screen, self.color, 
+                           (int(self.position[0] * GRID_SIZE), int(self.position[1] * GRID_SIZE)), 
+                           int(self.genome.get_gene('size').value * 4))

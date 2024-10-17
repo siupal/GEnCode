@@ -1,25 +1,41 @@
-from .base_organism import Organism
-import random
+from .base_organism import BaseOrganism
+from config import *
+import numpy as np
 
-class Plant(Organism):
-    def __init__(self, location, genes):
-        super().__init__('Plant', location, genes)
-        self.photosynthesis_efficiency = genes['photosynthesis_efficiency']
+class Plant(BaseOrganism):
+    def __init__(self, environment, position=None, genes=None):
+        super().__init__(environment, position, genes)
+        self.color = (0, 255, 0)  # 绿色
+        self.size = PLANT_INITIAL_SIZE
+        
+        # 如果需要添加植物特有的基因
+        if self.genes is None:
+            self.genes = self.initialize_genes()
+        self.genes.update({
+            'photosynthesis_efficiency': np.random.normal(1.0, 0.1),
+            # 其他植物特有的基因...
+        })
 
-    def act(self, action, environment):
-        self.photosynthesize(environment)
+    def update(self, environment):
+        if super().update(environment):
+            self.photosynthesize(environment)
+            self.grow()
+            return True
+        return False
 
     def photosynthesize(self, environment):
-        light = environment.get_light(self.location)
-        energy_produced = light * self.photosynthesis_efficiency
-        self.energy += energy_produced
-        environment.add_resources(self.location, energy_produced * 0.1)
+        light = environment.light_intensity[int(self.position[1])][int(self.position[0])]
+        soil_fertility = environment.soil_fertility[int(self.position[1])][int(self.position[0])]
+        water = environment.consume_resource('water', self.genes['water_consumption'], self.position)
+        minerals = environment.consume_resource('minerals', self.genes['mineral_consumption'], self.position)
+        
+        energy_gain = (light * soil_fertility * water * minerals) * self.genes['energy_efficiency'] * PHOTOSYNTHESIS_RATE
+        self.energy += energy_gain
 
-    def decide(self, surroundings):
-        # 植物不移动，只进行光合作用
-        return 'photosynthesize'
+    def grow(self):
+        self.size = min(self.size + PLANT_GROWTH_RATE, self.genes.get_gene('size').value * 2)
 
-    def reproduce(self, environment):
-        if self.energy > 150 and random.random() < self.genes['reproduction_rate']:
-            return super().reproduce()
-        return None
+    def draw(self, screen):
+        pygame.draw.circle(screen, self.color, 
+                           (int(self.position[0] * GRID_SIZE), int(self.position[1] * GRID_SIZE)), 
+                           int(self.size * 3))

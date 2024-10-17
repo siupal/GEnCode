@@ -1,62 +1,62 @@
+import os
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
 import pygame
+import pygame_gui
+import torch
 from config import *
 from simulation import Simulation
 from visualization.plotting import Visualization
 
+pygame.init()
+
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("EcoSyn - Ecosystem Simulator")
+
+simulation = Simulation()
+visualization = Visualization(SCREEN_WIDTH, SCREEN_HEIGHT)
+
 def main():
-    """主函数，运行整个模拟过程"""
-    # 初始化Pygame
-    pygame.init()
-    
-    # 创建可视化对象
-    visualization = Visualization(SCREEN_WIDTH, SCREEN_HEIGHT)
-
-    # 设置初始生物数量
-    initial_organisms = {
-        'Plant': INITIAL_PRODUCER_COUNT,
-        'Consumer': INITIAL_CONSUMER_COUNT,
-        'Decomposer': INITIAL_DECOMPOSER_COUNT
-    }
-    
-    # 创建模拟对象
-    simulation = Simulation(SCREEN_WIDTH // GRID_SIZE, SCREEN_HEIGHT // GRID_SIZE, initial_organisms)
-    
-    running = True
     clock = pygame.time.Clock()
-    time_steps = []
-    population_counts = {'Plant': [], 'Consumer': [], 'Decomposer': []}
-    gene_diversity = []
+    running = True
+    paused = False
 
-    # 主循环
-    while running and simulation.time < SIMULATION_DURATION:
-        # 处理事件
+    while running:
+        time_delta = clock.tick(60)/1000.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-        # 更新模拟
-        simulation.step()
+            visualization.handle_event(event)
+
+            if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == visualization.start_button:
+                    paused = False
+                elif event.ui_element == visualization.pause_button:
+                    paused = True
+                elif event.ui_element == visualization.reset_button:
+                    simulation.reset()
+                elif event.ui_element == visualization.plot_button:
+                    visualization.plot_population_dynamics(simulation.time_steps, simulation.population_history)
+                    visualization.plot_gene_distribution(simulation.organisms, 'size')
+
+        visualization.update(time_delta)
+
+        if not paused:
+            simulation.update()
+
+        screen.fill(WHITE)
+        env_surface = visualization.draw_environment(simulation.environment)
+        screen.blit(env_surface, (0, 0))
+        visualization.draw_organisms(simulation.organisms, screen)
+        
         stats = simulation.get_stats()
-        
-        # 更新显示
-        visualization.update_display(simulation.environment.grid, stats)
-        
-        # 记录数据
-        time_steps.append(simulation.time)
-        for species in population_counts:
-            population_counts[species].append(stats[species.lower() + 's'])
-        gene_diversity.append(simulation.calculate_gene_diversity())
+        visualization.update_ui(stats)
+        visualization.draw(screen)
 
-        # 控制帧率
-        clock.tick(60)
+        pygame.display.flip()
 
-    # 退出Pygame
     pygame.quit()
-
-    # 显示最终的可视化结果
-    visualization.show_population_plot(time_steps, population_counts)
-    visualization.show_global_distribution(simulation.environment)
-    visualization.show_gene_diversity(time_steps, gene_diversity)
 
 if __name__ == "__main__":
     main()

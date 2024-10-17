@@ -1,42 +1,124 @@
 # 定义常量
 
 # 屏幕尺寸和网格大小
-SCREEN_WIDTH = 800  # 屏幕宽度（像素）
-SCREEN_HEIGHT = 600  # 屏幕高度（像素）
-GRID_SIZE = 20  # 每个网格单元的大小（像素）
+SCREEN_WIDTH = 1920  # 增加屏幕宽度
+SCREEN_HEIGHT = 1080  # 增加屏幕高度
+GRID_SIZE = 200  # 增加网格大小，减少计算量
 
 # 颜色定义（RGB格式）
-GREEN = (34, 139, 34)    # 资源的森林绿
-RED = (178, 34, 34)      # 生产者的砖红色
-BLUE = (70, 130, 180)    # 消费者的钢蓝色
-WHITE = (245, 245, 245)  # 背景的灰白色
-YELLOW = (218, 165, 32)  # 分解者的金菊色
-
-# 其他颜色
-LIGHT_GREEN = (144, 238, 144)  # 浅绿色，用于表示新生长的植物
-BROWN = (139, 69, 19)    # 棕色，用于表示土壤或枯萎的植物
-LIGHT_BLUE = (173, 216, 230)  # 浅蓝色，用于表示水资源
-ORANGE = (255, 140, 0)   # 橙色，用于表示能量或阳光
+WHITE = (255, 255, 255)  # 背景的灰白色
+BLACK = (0, 0, 0)  # 黑色
 
 # 环境参数初始值
-INITIAL_TEMPERATURE = 25  # 初始温度（摄氏度）
+INITIAL_TEMPERATURE = 20  # 初始温度（摄氏度）
 INITIAL_HUMIDITY = 50    # 初始湿度（百分比）
 INITIAL_LIGHT_INTENSITY = 100  # 初始光照强度（任意单位）
 INITIAL_SOIL_FERTILITY = 5  # 初始土壤肥力（任意单位）
 
 # 生物初始数量
-INITIAL_PRODUCER_COUNT = 50  # 初始生产者数量
-INITIAL_CONSUMER_COUNT = 20  # 初始消费者数量
-INITIAL_DECOMPOSER_COUNT = 10  # 初始分解者数量
+INITIAL_PRODUCER_COUNT = 500
+INITIAL_CONSUMER_COUNT = 100
+INITIAL_DECOMPOSER_COUNT = 50
 
 # 模拟参数
-TIME_STEP = 1  # 每次模拟步骤的时间单位
+TIME_STEP = 0.05  # 减小时间步长，使更新更频繁
 SIMULATION_DURATION = 1000  # 模拟总时长（时间单位）
 
 # 基因突变参数
-MUTATION_RATE = 0.01  # 基因突变率
+MUTATION_RATE = 0.1  # 增加突变率
 MUTATION_MAGNITUDE = 0.1  # 突变幅度（相对于原值的比例）
 
 # 能量参数
-ENERGY_TRANSFER_EFFICIENCY = 0.1  # 能量传递效率（捕食时）
-REPRODUCTION_ENERGY_THRESHOLD = 100  # 繁殖所需的能量阈值
+ENERGY_TRANSFER_EFFICIENCY = 0.3
+REPRODUCTION_ENERGY_THRESHOLD = 200
+INITIAL_ENERGY = 150
+
+# 窗口设置
+WIDTH = 1000
+HEIGHT = 600
+
+# 颜色定义
+WHITE = (255, 255, 255)
+GRAY = (128, 128, 128)
+BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+BROWN = (165, 42, 42)
+
+# 动物参数
+RABBIT_SPEED = 2
+RABBIT_SIZE = 5
+WOLF_SPEED = 3
+WOLF_SIZE = 7
+
+# 植物参数
+PLANT_INITIAL_SIZE = 3
+PLANT_MAX_SIZE = 5
+PLANT_GROWTH_RATE = 0.05  # 植物生长速率
+
+# 生态系统参数
+INITIAL_RABBITS = 30
+INITIAL_WOLVES = 5
+INITIAL_PLANTS = 100
+MAX_PLANTS = 200
+
+# 繁殖参数
+REPRODUCTION_THRESHOLD = 200.0  # 确保这是一个浮点数
+REPRODUCTION_RATE = 0.1  # 增加繁殖概率
+RABBIT_REPRODUCTION_RATE = 0.03
+WOLF_REPRODUCTION_RATE = 0.01
+RABBIT_REPRODUCTION_ENERGY = 80
+WOLF_REPRODUCTION_ENERGY = 120
+
+# 能量参数
+MOVEMENT_ENERGY_COST = 0.1
+RABBIT_EATING_ENERGY_GAIN = 20
+WOLF_EATING_ENERGY_GAIN = 50
+REPRODUCTION_ENERGY_COST = 50
+
+# 寿命参数
+RABBIT_MAX_AGE = 200
+WOLF_MAX_AGE = 300
+
+# 新增常量
+INITIAL_RESOURCES = 100
+MAX_RESOURCES = 1000
+DISASTER_PROBABILITY = 0.001  # 每次更新有0.1%的概率发生自然灾害
+DISASTER_AREA = 0.1  # 灾害影响的区域比例
+DECOMPOSITION_RATE = 0.1  # 有机物分解速率
+
+# 新增参数
+CONSUMER_ENERGY_LOSS_RATE = 0.02  # 消费者每回合能量损失率
+DECOMPOSER_ENERGY_GAIN_RATE = 0.03  # 分解者从有机物获取能量的速率
+
+# ... (其他常量保持不)
+SPECIES_DIFFERENCE_THRESHOLD = 0.5  # 可以根据需要调整这个值
+
+# 环境变化参数
+ENVIRONMENTAL_CHANGE_RATE = 0.02  # 每次更新环境变化的幅度
+
+# 生物寿命参数
+MAX_AGE = 100  # 减少最大寿命
+
+# 资源相关常量
+INITIAL_RESOURCE_AMOUNT = 100  # 初始资源量
+MAX_RESOURCE_AMOUNT = 1000  # 最大资源量
+WATER_REGEN_RATE = 0.5
+MINERAL_REGEN_RATE = 0.3
+ORGANIC_MATTER_REGEN_RATE = 0.2
+
+# 资源转换为能量的比率
+WATER_ENERGY_CONVERSION = 1.0
+MINERAL_ENERGY_CONVERSION = 2.0
+ORGANIC_MATTER_ENERGY_CONVERSION = 3.0
+
+# 光合作用效率
+PHOTOSYNTHESIS_RATE = 0.2
+
+# 其他参数
+REPRODUCTION_RATE = 0.05  # 增加繁殖概率
+
+# 移动参数
+MOVEMENT_SPEED = 5.0  # 增加移动速度
+
+# 调整这些参数以优化性能
+UPDATE_INTERVAL = 50  # 毫秒，控制更新频率

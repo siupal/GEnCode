@@ -1,4 +1,4 @@
-# EcoSyn: 地球尺度生物演化模拟程序
+# 生态系统模拟器
 
 EcoSyn 是一个基于 Python 的生态系统模拟程序，旨在模拟地球尺度的生物演化过程。该程序利用 GPU 加速计算，在普通个人电脑上实现高效运行。
 
@@ -13,47 +13,21 @@ EcoSyn 是一个基于 Python 的生态系统模拟程序，旨在模拟地球�
 - 直观的可视化界面
 - 支持参数调整和情景模拟
 
-## 安装指南
+## 安装要求
 
-1. 确保您的系统已安装 Python 3.7 或更高版本。
+- Python 3.7+
+- Pygame
 
-2. 克隆仓库：
-   ```bash
-   git clone https://github.com/yourusername/ecosyn.git
-   ```
+## 如何运行
 
-3. 进入项目目录：
-   ```bash
-   cd ecosyn
-   ```
+1. 确保已安装Python和Pygame
+2. 克隆或下载此仓库
+3. 在命令行中导航到项目目录
+4. 运行以下命令:
 
-4. 创建并激活虚拟环境（可选但推荐）：
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # 在Windows上使用 venv\Scripts\activate
-   ```
-
-5. 安装依赖：
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## 使用说明
-
-1. 运行模拟：
-   ```bash
-   python EcoSyn.py
-   ```
-
-2. 在图形界面中，您可以观察到生态系统的实时变化。模拟过程中会显示以下信息：
-   - 生物分布图
-   - 当前时间步
-   - 各物种的数量统计
-
-3. 模拟结束后，程序将显示以下可视化结果：
-   - 种群动态图表
-   - 全球物种分布热力图
-   - 基因多样性变化图表
+```
+python main.py
+```
 
 ## 项目结构
 
